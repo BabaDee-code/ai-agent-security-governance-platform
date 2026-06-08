@@ -1,0 +1,13 @@
+roles:
+  research_agent:
+    allowed_tools:
+      - web_search
+      - document_summarizer
+  security_agent:
+    allowed_tools:
+      - log_search
+      - ticket_creator
+      - endpoint_isolation_request
+high_risk_tools:
+  - endpoint_isolation_request
+  - ticket_creator
