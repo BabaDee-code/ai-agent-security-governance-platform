@@ -24,7 +24,8 @@ def test_high_risk_tool_requires_approval():
         {"request_id": "T2", "agent_role": "security_agent", "tool_name": "endpoint_isolation_request", "prompt": "isolate host"},
         POLICY,
     )
-    assert decision.decision in {"allow_with_monitoring", "requires_approval"}
+    assert decision.decision == "requires_approval"
+    assert decision.risk_score >= 70
     assert "HUMAN_IN_THE_LOOP" in decision.controls
 
 
