@@ -5,9 +5,9 @@ from dataclasses import dataclass
 from typing import Any
 
 SENSITIVE_PATTERNS = {
-    "email": re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"),
-    "ssn_like": re.compile(r"\\b\\d{3}-\\d{2}-\\d{4}\\b"),
-    "api_key_like": re.compile(r"(?i)(api[_-]?key|secret|token)\\s*[:=]\\s*[A-Za-z0-9_\\-]{12,}"),
+    "email": re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}"),
+    "ssn_like": re.compile(r"(?:^|[^0-9])[0-9]{3}-[0-9]{2}-[0-9]{4}(?:[^0-9]|$)"),
+    "api_key_like": re.compile(r"(?i)(api[_-]?key|secret|token)[ \t]*[:=][ \t]*[A-Za-z0-9_-]{12,}"),
 }
 
 PROMPT_INJECTION_INDICATORS = [
