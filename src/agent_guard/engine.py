@@ -38,7 +38,11 @@ class AgentDecision:
 
 
 def evaluate_agent_request(request: dict[str, Any], policy: dict[str, Any]) -> AgentDecision:
-    """Evaluate an AI agent tool request against governance policy."""
+    """Evaluate an AI agent tool request against governance policy.
+
+    The engine is intentionally deterministic so every agent decision can be
+    explained, tested, logged, and reviewed during governance or incident review.
+    """
     request_id = str(request.get("request_id", "unknown"))
     tool_name = str(request.get("tool_name", "unknown"))
     prompt = str(request.get("prompt", ""))
@@ -69,7 +73,9 @@ def evaluate_agent_request(request: dict[str, Any], policy: dict[str, Any]) -> A
         controls.append("SENSITIVE_DATA_PROTECTION")
 
     if tool_name in high_risk_tools:
-        risk_score += 35
+        # High-risk tools can affect business systems, users, tickets, or endpoints.
+        # They should require human approval even when the prompt itself appears benign.
+        risk_score += 70
         controls.append("HUMAN_IN_THE_LOOP")
 
     risk_score = min(100, risk_score)
