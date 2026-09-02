@@ -32,8 +32,10 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements-dev.txt
 pytest -q
-python -m agent_guard.evaluate data/sample_requests.json policies/tool_policy.yml
+PYTHONPATH=src python -m agent_guard.evaluate data/sample_requests.json policies/tool_policy.yml
 ```
+
+On Windows PowerShell, use `$env:PYTHONPATH = "src"` before the final command.
 
 ## Example decision
 
