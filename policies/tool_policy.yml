@@ -11,3 +11,6 @@ roles:
 high_risk_tools:
   - endpoint_isolation_request
   - ticket_creator
+sensitive_data_tools:
+  - web_search
+  - document_summarizer
