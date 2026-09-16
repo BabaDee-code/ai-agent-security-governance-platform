@@ -51,9 +51,11 @@ def evaluate_agent_request(request: dict[str, Any], policy: dict[str, Any]) -> A
 
     allowed_tools = set(policy.get("roles", {}).get(agent_role, {}).get("allowed_tools", []))
     high_risk_tools = set(policy.get("high_risk_tools", []))
+    sensitive_data_tools = set(policy.get("sensitive_data_tools", []))
 
     controls = ["AUDIT_LOGGING", "TOOL_LEAST_PRIVILEGE"]
     risk_score = 0
+    sensitive_data_detected = _contains_sensitive_data(data)
 
     if tool_name not in allowed_tools:
         return AgentDecision(
@@ -68,20 +70,27 @@ def evaluate_agent_request(request: dict[str, Any], policy: dict[str, Any]) -> A
         risk_score += 50
         controls.append("PROMPT_INJECTION_DETECTION")
 
-    if _contains_sensitive_data(data):
+    if sensitive_data_detected:
         risk_score += 40
         controls.append("SENSITIVE_DATA_PROTECTION")
 
+    if sensitive_data_detected and tool_name in sensitive_data_tools:
+        risk_score = max(risk_score, 70)
+        controls.extend(["DATA_BOUNDARY_ENFORCEMENT", "HUMAN_IN_THE_LOOP"])
+
     if tool_name in high_risk_tools:
-        # High-risk tools can affect business systems, users, tickets, or endpoints.
-        # They should require human approval even when the prompt itself appears benign.
         risk_score += 70
         controls.append("HUMAN_IN_THE_LOOP")
 
+    controls = list(dict.fromkeys(controls))
     risk_score = min(100, risk_score)
 
     if risk_score >= 70:
-        return AgentDecision(request_id, "requires_approval", risk_score, "high-risk agent action requires human approval", controls)
+        if sensitive_data_detected and tool_name in sensitive_data_tools:
+            reason = "sensitive data crossing a restricted tool boundary requires human approval"
+        else:
+            reason = "high-risk agent action requires human approval"
+        return AgentDecision(request_id, "requires_approval", risk_score, reason, controls)
 
     if risk_score >= 40:
         return AgentDecision(request_id, "allow_with_monitoring", risk_score, "moderate risk action allowed with enhanced monitoring", controls)
