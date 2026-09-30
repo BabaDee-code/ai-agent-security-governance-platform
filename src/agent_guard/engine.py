@@ -42,6 +42,8 @@ def evaluate_agent_request(request: dict[str, Any], policy: dict[str, Any]) -> A
 
     The engine is intentionally deterministic so every agent decision can be
     explained, tested, logged, and reviewed during governance or incident review.
+    Prompt text and retrieved/tool data are separate trust boundaries: either can
+    contain instructions intended to redirect an agent.
     """
     request_id = str(request.get("request_id", "unknown"))
     tool_name = str(request.get("tool_name", "unknown"))
@@ -66,7 +68,13 @@ def evaluate_agent_request(request: dict[str, Any], policy: dict[str, Any]) -> A
 
     if _contains_prompt_injection(prompt):
         risk_score += 50
-        controls.append("PROMPT_INJECTION_DETECTION")
+        controls.extend(["PROMPT_INJECTION_DETECTION", "DIRECT_PROMPT_INJECTION_DETECTION"])
+
+    if _contains_prompt_injection(data):
+        risk_score += 50
+        if "PROMPT_INJECTION_DETECTION" not in controls:
+            controls.append("PROMPT_INJECTION_DETECTION")
+        controls.append("INDIRECT_PROMPT_INJECTION_DETECTION")
 
     if _contains_sensitive_data(data):
         risk_score += 40
